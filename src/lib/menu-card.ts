@@ -233,10 +233,9 @@ export async function generateMenuCardCanvas(data: CardData): Promise<HTMLCanvas
   ctx.fillStyle = rgb(INK);
   ctx.font = `bold ${mm(5.2)}px Georgia, 'Times New Roman', serif`;
   ctx.letterSpacing = `${mm(0.4)}px`;
-  wrapText(ctx, product.name.toUpperCase(), canvas.width / 2, y, mm(CARD_W - 24), mm(6)).forEach(
-    () => {},
-  );
-  y += mm(6) * Math.max(1, measureLines(ctx, product.name.toUpperCase(), mm(CARD_W - 24)).length);
+  const nameLines = measureLines(ctx, product.name.toUpperCase(), mm(CARD_W - 24));
+  nameLines.forEach((line, i) => ctx.fillText(line, canvas.width / 2, y + i * mm(6)));
+  y += mm(6) * nameLines.length;
   ctx.letterSpacing = "0px";
 
   ctx.fillStyle = rgb(MUTED);
@@ -287,19 +286,6 @@ function measureLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: num
     }
   }
   if (current) lines.push(current);
-  return lines;
-}
-
-function wrapText(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  x: number,
-  y: number,
-  maxWidth: number,
-  lineHeight: number,
-): string[] {
-  const lines = measureLines(ctx, text, maxWidth);
-  lines.forEach((line, i) => ctx.fillText(line, x, y + i * lineHeight));
   return lines;
 }
 
