@@ -1,11 +1,14 @@
 import { useSyncExternalStore } from "react";
 
+import burgerImage from "@/assets/classic-burger.jpg";
+import sandwichImage from "@/assets/club-sandwich.jpg";
 import margheritaImage from "@/assets/margherita-pizza.jpg";
+import cupcakeImage from "@/assets/vanilla-cupcake.jpg";
 import { deleteAsset } from "@/lib/asset-storage";
 import { productPath } from "@/lib/qr";
 import type { Product, ProductInput } from "@/lib/types";
 
-const KEY = "lapiazza.products.v1";
+const KEY = "lapiazza.products.v2";
 
 const seed: Product[] = [
   {
@@ -26,6 +29,63 @@ const seed: Product[] = [
     featured: true,
     createdAt: "2026-08-01T10:00:00.000Z",
     updatedAt: "2026-08-01T10:00:00.000Z",
+  },
+  {
+    id: "seed-club-sandwich",
+    name: "Toscana Club Sandwich",
+    slug: "club-sandwich",
+    description:
+      "Golden grilled sourdough layered with roast chicken, melted provolone, vine tomato and garden greens.",
+    price: 249,
+    category: "Sandwich",
+    ingredients:
+      "Sourdough bread, roast chicken, provolone, vine tomato, baby greens, herb aioli",
+    imageUrl: sandwichImage,
+    model3dUrl: null,
+    arUrl: "https://webxr.run/1YdPrgmrYmmlg",
+    qrCodeUrl: "/menu/club-sandwich",
+    published: true,
+    featured: true,
+    createdAt: "2026-08-02T10:00:00.000Z",
+    updatedAt: "2026-08-02T10:00:00.000Z",
+  },
+  {
+    id: "seed-classic-burger",
+    name: "La Piazza Classic Burger",
+    slug: "classic-burger",
+    description:
+      "Flame-grilled beef patty with aged cheddar, caramelised onion and tomato in a brioche bun.",
+    price: 329,
+    category: "Burger",
+    ingredients:
+      "Brioche bun, grilled beef patty, aged cheddar, caramelised onion, tomato, house sauce",
+    imageUrl: burgerImage,
+    model3dUrl: null,
+    arUrl: "https://webxr.run/pz1k3pmdPx7EQ",
+    qrCodeUrl: "/menu/classic-burger",
+    published: true,
+    featured: true,
+    createdAt: "2026-08-03T10:00:00.000Z",
+    updatedAt: "2026-08-03T10:00:00.000Z",
+  },
+  {
+    id: "seed-vanilla-cupcake",
+    name: "Vanilla Bean Cupcake",
+    slug: "vanilla-cupcake",
+    description:
+      "Light vanilla sponge crowned with silky Madagascan vanilla buttercream, baked fresh each morning.",
+    price: 149,
+    category: "Dolci",
+    ingredients:
+      "Vanilla sponge, Madagascan vanilla buttercream, butter, free-range eggs, cane sugar",
+    imageUrl: cupcakeImage,
+    model3dUrl: null,
+    arUrl: "https://webxr.run/v32MErLX2b1n9",
+    qrCodeUrl: "/menu/vanilla-cupcake",
+    published: true,
+    featured: false,
+    createdAt: "2026-08-04T10:00:00.000Z",
+    updatedAt: "2026-08-04T10:00:00.000Z",
   },
 ];
 

@@ -17,7 +17,7 @@ import {
   generateMenuCardPdf,
   type CardData,
 } from "@/lib/menu-card";
-import { downloadQrPng, productUrl, triggerDownload } from "@/lib/qr";
+import { downloadQrPng, shareUrl, triggerDownload } from "@/lib/qr";
 import type { Product } from "@/lib/types";
 
 /**

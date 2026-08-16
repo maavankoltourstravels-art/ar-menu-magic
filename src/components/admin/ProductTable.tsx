@@ -32,7 +32,7 @@ import {
 import { useAssetUrl } from "@/hooks/use-asset-url";
 import { formatPrice } from "@/lib/menu-card";
 import { deleteProduct, duplicateProduct } from "@/lib/products-store";
-import { downloadQrPng, productUrl } from "@/lib/qr";
+import { downloadQrPng, shareUrl } from "@/lib/qr";
 import type { Product } from "@/lib/types";
 
 function Thumb({ product }: { product: Product }) {
