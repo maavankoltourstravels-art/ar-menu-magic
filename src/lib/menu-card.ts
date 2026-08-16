@@ -51,107 +51,131 @@ export function formatPrice(price: number): string {
   return `\u20B9${price.toLocaleString("en-IN")}`;
 }
 
+/** Renders the product photo into a transparent circular PNG. */
+async function circularPhoto(src: string, size = 900): Promise<string> {
+  const img = await loadImage(src);
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+  ctx.clip();
+  drawCover(ctx, img, 0, 0, size, size);
+  ctx.restore();
+  return canvas.toDataURL("image/png");
+}
+
+const BG_WORD_ROWS = [30, 60, 90, 118];
+
+function bgWord(name: string): string {
+  return (name.split(/\s+/)[0] ?? name).toUpperCase().slice(0, 8);
+}
+
 export async function generateMenuCardPdf(data: CardData): Promise<jsPDF> {
   const { product } = data;
   const doc = new jsPDF({ unit: "mm", format: [CARD_W, CARD_H], orientation: "portrait" });
 
-  doc.setFillColor(...CREAM);
+  // Green field
+  doc.setFillColor(...GREEN);
   doc.rect(0, 0, CARD_W, CARD_H, "F");
 
-  // Double gold frame
-  doc.setDrawColor(...GOLD);
-  doc.setLineWidth(0.7);
-  doc.rect(5, 5, CARD_W - 10, CARD_H - 10);
-  doc.setLineWidth(0.2);
-  doc.rect(7, 7, CARD_W - 14, CARD_H - 14);
+  // Oversized repeated product word, right-aligned, bleeding off the edge
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...GREEN_SOFT);
+  doc.setFontSize(46);
+  const word = bgWord(product.name);
+  BG_WORD_ROWS.forEach((y) => {
+    doc.text(word, CARD_W + 4, y, { align: "right" });
+  });
 
-  // Header
-  doc.setFont("times", "bold");
-  doc.setTextColor(...INK);
-  doc.setFontSize(20);
-  doc.text(RESTAURANT.name.toUpperCase(), CARD_W / 2, 19, { align: "center", charSpace: 0.9 });
+  // Wordmark
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(10);
+  doc.text(RESTAURANT.name.toUpperCase(), 9, 15, { charSpace: 0.4 });
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(6.5);
-  doc.setTextColor(...MUTED);
-  doc.text(RESTAURANT.tagline.toUpperCase(), CARD_W / 2, 24, { align: "center", charSpace: 0.6 });
+  doc.setFontSize(4.6);
+  doc.text(RESTAURANT.tagline.toUpperCase(), 9, 19, { charSpace: 0.4 });
 
-  doc.setDrawColor(...GOLD);
-  doc.setLineWidth(0.3);
-  doc.line(CARD_W / 2 - 12, 27, CARD_W / 2 + 12, 27);
-
-  // Product image (centre-cropped into a fixed window)
-  const imgX = 14;
-  const imgY = 31;
-  const imgW = CARD_W - 28;
-  const imgH = 42;
+  // Hero photo in a circle
+  const cx = CARD_W / 2;
+  const cy = 62;
+  const r = 33;
   if (data.imageDataUrl) {
     try {
-      const img = await loadImage(data.imageDataUrl);
-      const canvas = document.createElement("canvas");
-      canvas.width = 900;
-      canvas.height = Math.round((900 * imgH) / imgW);
-      const ctx = canvas.getContext("2d")!;
-      drawCover(ctx, img, 0, 0, canvas.width, canvas.height);
-      doc.addImage(canvas.toDataURL("image/jpeg", 0.92), "JPEG", imgX, imgY, imgW, imgH);
+      doc.addImage(await circularPhoto(data.imageDataUrl), "PNG", cx - r, cy - r, r * 2, r * 2);
     } catch {
-      /* image unavailable — layout still valid */
+      /* layout still valid without the photo */
     }
   } else {
-    doc.setFillColor(238, 230, 218);
-    doc.rect(imgX, imgY, imgW, imgH, "F");
+    doc.setFillColor(...GREEN_SOFT);
+    doc.circle(cx, cy, r, "F");
   }
-  doc.setDrawColor(...GOLD);
-  doc.setLineWidth(0.25);
-  doc.rect(imgX, imgY, imgW, imgH);
 
-  // Name
-  let y = imgY + imgH + 9;
-  doc.setFont("times", "bold");
-  doc.setTextColor(...INK);
-  doc.setFontSize(14);
-  const nameLines = doc.splitTextToSize(product.name.toUpperCase(), CARD_W - 24) as string[];
-  nameLines.forEach((line) => {
-    doc.text(line, CARD_W / 2, y, { align: "center", charSpace: 0.4 });
-    y += 6;
-  });
+  // Cream footer panel
+  const panelY = 104;
+  doc.setFillColor(...CREAM);
+  doc.rect(0, panelY, CARD_W, CARD_H - panelY, "F");
 
-  // Description
-  doc.setFont("times", "italic");
-  doc.setFontSize(8);
-  doc.setTextColor(...MUTED);
-  const descLines = (doc.splitTextToSize(product.description, CARD_W - 26) as string[]).slice(0, 4);
-  y += 1;
-  descLines.forEach((line) => {
-    doc.text(line, CARD_W / 2, y, { align: "center" });
-    y += 4;
-  });
-
-  // Price
-  y += 4;
+  // QR block
+  const qrSize = 25;
+  const qrX = 8;
+  const qrY = panelY + 12;
+  doc.setFillColor(...GREEN);
+  doc.roundedRect(qrX - 1, panelY + 4, qrSize + 2, 5.6, 2.8, 2.8, "F");
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(15);
-  doc.setTextColor(...TERRA);
-  doc.text(formatPrice(product.price), CARD_W / 2, y, { align: "center" });
-
-  // QR block with generous quiet zone
-  const qrSize = 30;
-  const qrX = (CARD_W - qrSize) / 2;
-  const qrY = CARD_H - 46;
+  doc.setFontSize(5.6);
+  doc.setTextColor(255, 255, 255);
+  doc.text("SCAN ME", qrX + qrSize / 2, panelY + 7.8, { align: "center", charSpace: 0.4 });
   doc.setFillColor(255, 255, 255);
-  doc.rect(qrX - 3, qrY - 3, qrSize + 6, qrSize + 6, "F");
+  doc.rect(qrX - 1, qrY - 1, qrSize + 2, qrSize + 2, "F");
   doc.addImage(data.qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
 
+  // Copy column
+  const colX = qrX + qrSize + 6;
+  const colW = CARD_W - colX - 8;
+  let y = panelY + 12;
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(7.5);
   doc.setTextColor(...INK);
-  doc.text("SCAN TO VIEW IN AR", CARD_W / 2, qrY + qrSize + 8, {
-    align: "center",
-    charSpace: 0.5,
+  doc.setFontSize(11);
+  const nameLines = (doc.splitTextToSize(product.name.toUpperCase(), colW) as string[]).slice(0, 2);
+  nameLines.forEach((line) => {
+    doc.text(line, colX, y);
+    y += 5;
   });
+
   doc.setFont("times", "italic");
-  doc.setFontSize(7.5);
+  doc.setFontSize(6.4);
   doc.setTextColor(...MUTED);
-  doc.text(`\u201C${RESTAURANT.motto}\u201D`, CARD_W / 2, qrY + qrSize + 12.5, { align: "center" });
+  const descLines = (doc.splitTextToSize(product.description, colW) as string[]).slice(0, 2);
+  y += 1;
+  descLines.forEach((line) => {
+    doc.text(line, colX, y);
+    y += 3;
+  });
+
+  // Price badge
+  y += 3;
+  const price = formatPrice(product.price);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  const pw = doc.getTextWidth(price) + 8;
+  doc.setFillColor(...TERRA);
+  doc.roundedRect(colX, y - 4.4, pw, 7, 3.5, 3.5, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.text(price, colX + pw / 2, y, { align: "center" });
+
+  // Footer contact
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(5);
+  doc.setTextColor(...MUTED);
+  doc.text(
+    `${RESTAURANT.location.toUpperCase()}  ·  ${RESTAURANT.phone}`,
+    CARD_W / 2,
+    CARD_H - 5,
+    { align: "center", charSpace: 0.3 },
+  );
 
   return doc;
 }
@@ -175,6 +199,24 @@ function drawCover(
   ctx.restore();
 }
 
+function roundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+  ctx.fill();
+}
+
 export async function generateMenuCardCanvas(data: CardData): Promise<HTMLCanvasElement> {
   const S = 300 / 25.4; // px per mm @300dpi
   const canvas = document.createElement("canvas");
@@ -184,92 +226,118 @@ export async function generateMenuCardCanvas(data: CardData): Promise<HTMLCanvas
   const mm = (v: number) => v * S;
   const rgb = (c: readonly number[]) => `rgb(${c[0]},${c[1]},${c[2]})`;
   const { product } = data;
+  const pt = (v: number) => mm(v * 0.3528);
 
-  ctx.fillStyle = rgb(CREAM);
+  ctx.fillStyle = rgb(GREEN);
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  ctx.strokeStyle = rgb(GOLD);
-  ctx.lineWidth = mm(0.7);
-  ctx.strokeRect(mm(5), mm(5), mm(CARD_W - 10), mm(CARD_H - 10));
-  ctx.lineWidth = mm(0.25);
-  ctx.strokeRect(mm(7), mm(7), mm(CARD_W - 14), mm(CARD_H - 14));
+  // Repeated background word
+  ctx.fillStyle = rgb(GREEN_SOFT);
+  ctx.textAlign = "right";
+  ctx.font = `bold ${pt(46)}px Helvetica, Arial, sans-serif`;
+  const word = bgWord(product.name);
+  BG_WORD_ROWS.forEach((y) => ctx.fillText(word, mm(CARD_W + 4), mm(y)));
 
-  ctx.textAlign = "center";
-  ctx.fillStyle = rgb(INK);
-  ctx.font = `bold ${mm(7.4)}px Georgia, 'Times New Roman', serif`;
-  ctx.letterSpacing = `${mm(0.9)}px`;
-  ctx.fillText(RESTAURANT.name.toUpperCase(), canvas.width / 2, mm(19));
-  ctx.fillStyle = rgb(MUTED);
-  ctx.font = `${mm(2.4)}px Helvetica, Arial, sans-serif`;
-  ctx.letterSpacing = `${mm(0.5)}px`;
-  ctx.fillText(RESTAURANT.tagline.toUpperCase(), canvas.width / 2, mm(24));
+  // Wordmark
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `bold ${pt(10)}px Helvetica, Arial, sans-serif`;
+  ctx.letterSpacing = `${mm(0.4)}px`;
+  ctx.fillText(RESTAURANT.name.toUpperCase(), mm(9), mm(15));
+  ctx.font = `${pt(4.6)}px Helvetica, Arial, sans-serif`;
+  ctx.fillText(RESTAURANT.tagline.toUpperCase(), mm(9), mm(19));
   ctx.letterSpacing = "0px";
 
-  ctx.beginPath();
-  ctx.moveTo(canvas.width / 2 - mm(12), mm(27));
-  ctx.lineTo(canvas.width / 2 + mm(12), mm(27));
-  ctx.strokeStyle = rgb(GOLD);
-  ctx.lineWidth = mm(0.3);
-  ctx.stroke();
-
-  const imgX = mm(14);
-  const imgY = mm(31);
-  const imgW = mm(CARD_W - 28);
-  const imgH = mm(42);
+  // Hero circle
+  const cx = canvas.width / 2;
+  const cy = mm(62);
+  const r = mm(33);
   if (data.imageDataUrl) {
     try {
       const img = await loadImage(data.imageDataUrl);
-      drawCover(ctx, img, imgX, imgY, imgW, imgH);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.clip();
+      drawCover(ctx, img, cx - r, cy - r, r * 2, r * 2);
+      ctx.restore();
     } catch {
       /* ignore */
     }
   } else {
-    ctx.fillStyle = "rgb(238,230,218)";
-    ctx.fillRect(imgX, imgY, imgW, imgH);
+    ctx.fillStyle = rgb(GREEN_SOFT);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
   }
-  ctx.strokeStyle = rgb(GOLD);
-  ctx.lineWidth = mm(0.25);
-  ctx.strokeRect(imgX, imgY, imgW, imgH);
 
-  let y = mm(31 + 42 + 9);
-  ctx.fillStyle = rgb(INK);
-  ctx.font = `bold ${mm(5.2)}px Georgia, 'Times New Roman', serif`;
-  ctx.letterSpacing = `${mm(0.4)}px`;
-  const nameLines = measureLines(ctx, product.name.toUpperCase(), mm(CARD_W - 24));
-  nameLines.forEach((line, i) => ctx.fillText(line, canvas.width / 2, y + i * mm(6)));
-  y += mm(6) * nameLines.length;
-  ctx.letterSpacing = "0px";
+  // Cream panel
+  const panelY = mm(104);
+  ctx.fillStyle = rgb(CREAM);
+  ctx.fillRect(0, panelY, canvas.width, canvas.height - panelY);
 
-  ctx.fillStyle = rgb(MUTED);
-  ctx.font = `italic ${mm(3)}px Georgia, 'Times New Roman', serif`;
-  const descLines = measureLines(ctx, product.description, mm(CARD_W - 26)).slice(0, 4);
-  y += mm(1);
-  descLines.forEach((line) => {
-    ctx.fillText(line, canvas.width / 2, y);
-    y += mm(4);
-  });
-
-  y += mm(4.5);
-  ctx.fillStyle = rgb(TERRA);
-  ctx.font = `bold ${mm(5.6)}px Helvetica, Arial, sans-serif`;
-  ctx.fillText(formatPrice(product.price), canvas.width / 2, y);
-
-  const qrSize = mm(30);
-  const qrX = (canvas.width - qrSize) / 2;
-  const qrY = mm(CARD_H - 46);
+  // QR block
+  const qrSize = mm(25);
+  const qrX = mm(8);
+  const qrY = panelY + mm(12);
+  ctx.fillStyle = rgb(GREEN);
+  roundRect(ctx, qrX - mm(1), panelY + mm(4), qrSize + mm(2), mm(5.6), mm(2.8));
   ctx.fillStyle = "#ffffff";
-  ctx.fillRect(qrX - mm(3), qrY - mm(3), qrSize + mm(6), qrSize + mm(6));
+  ctx.textAlign = "center";
+  ctx.font = `bold ${pt(5.6)}px Helvetica, Arial, sans-serif`;
+  ctx.letterSpacing = `${mm(0.4)}px`;
+  ctx.fillText("SCAN ME", qrX + qrSize / 2, panelY + mm(7.8));
+  ctx.letterSpacing = "0px";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(qrX - mm(1), qrY - mm(1), qrSize + mm(2), qrSize + mm(2));
   const qrImg = await loadImage(data.qrDataUrl);
   ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
+  // Copy column
+  const colX = qrX + qrSize + mm(6);
+  const colW = canvas.width - colX - mm(8);
+  let y = panelY + mm(12);
+  ctx.textAlign = "left";
   ctx.fillStyle = rgb(INK);
-  ctx.font = `bold ${mm(2.8)}px Helvetica, Arial, sans-serif`;
-  ctx.letterSpacing = `${mm(0.5)}px`;
-  ctx.fillText("SCAN TO VIEW IN AR", canvas.width / 2, qrY + qrSize + mm(8));
-  ctx.letterSpacing = "0px";
+  ctx.font = `bold ${pt(11)}px Helvetica, Arial, sans-serif`;
+  measureLines(ctx, product.name.toUpperCase(), colW)
+    .slice(0, 2)
+    .forEach((line) => {
+      ctx.fillText(line, colX, y);
+      y += mm(5);
+    });
+
   ctx.fillStyle = rgb(MUTED);
-  ctx.font = `italic ${mm(2.8)}px Georgia, serif`;
-  ctx.fillText(`\u201C${RESTAURANT.motto}\u201D`, canvas.width / 2, qrY + qrSize + mm(12.5));
+  ctx.font = `italic ${pt(6.4)}px Georgia, 'Times New Roman', serif`;
+  y += mm(1);
+  measureLines(ctx, product.description, colW)
+    .slice(0, 2)
+    .forEach((line) => {
+      ctx.fillText(line, colX, y);
+      y += mm(3);
+    });
+
+  // Price badge
+  y += mm(3);
+  const price = formatPrice(product.price);
+  ctx.font = `bold ${pt(10)}px Helvetica, Arial, sans-serif`;
+  const pw = ctx.measureText(price).width + mm(8);
+  ctx.fillStyle = rgb(TERRA);
+  roundRect(ctx, colX, y - mm(4.4), pw, mm(7), mm(3.5));
+  ctx.fillStyle = "#ffffff";
+  ctx.textAlign = "center";
+  ctx.fillText(price, colX + pw / 2, y);
+
+  // Footer contact
+  ctx.fillStyle = rgb(MUTED);
+  ctx.font = `${pt(5)}px Helvetica, Arial, sans-serif`;
+  ctx.letterSpacing = `${mm(0.3)}px`;
+  ctx.fillText(
+    `${RESTAURANT.location.toUpperCase()}  ·  ${RESTAURANT.phone}`,
+    canvas.width / 2,
+    canvas.height - mm(5),
+  );
+  ctx.letterSpacing = "0px";
 
   return canvas;
 }
