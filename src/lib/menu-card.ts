@@ -88,7 +88,7 @@ export async function generateMenuCardPdf(data: CardData): Promise<jsPDF> {
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...GREEN_SOFT);
   doc.setFontSize(46);
-  const word = bgWord(product.name);
+  const word = bgWord(product);
   BG_WORD_ROWS.forEach((y) => {
     doc.text(word, CARD_W + 4, y, { align: "right" });
   });
@@ -239,7 +239,7 @@ export async function generateMenuCardCanvas(data: CardData): Promise<HTMLCanvas
   ctx.fillStyle = rgb(GREEN_SOFT);
   ctx.textAlign = "right";
   ctx.font = `bold ${pt(46)}px Helvetica, Arial, sans-serif`;
-  const word = bgWord(product.name);
+  const word = bgWord(product);
   BG_WORD_ROWS.forEach((y) => ctx.fillText(word, mm(CARD_W + 4), mm(y)));
 
   // Wordmark
