@@ -20,11 +20,13 @@ export type CardData = {
 const CARD_W = 105;
 const CARD_H = 148;
 
-const CREAM = [252, 248, 240] as const;
-const INK = [40, 29, 22] as const;
-const TERRA = [166, 62, 40] as const;
-const MUTED = [122, 105, 92] as const;
-const GOLD = [186, 148, 84] as const;
+/** Poster palette — bold green field, cream footer, terracotta price. */
+const CREAM = [250, 248, 242] as const;
+const INK = [26, 32, 28] as const;
+const TERRA = [190, 62, 40] as const;
+const MUTED = [112, 120, 112] as const;
+const GREEN = [14, 92, 58] as const;
+const GREEN_SOFT = [26, 112, 72] as const;
 
 export async function buildCardData(product: Product): Promise<CardData> {
   const url = shareUrl(product);
