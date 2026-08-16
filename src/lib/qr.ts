@@ -1,10 +1,20 @@
 import QRCode from "qrcode";
 
+import type { Product } from "@/lib/types";
+
 export const productPath = (slug: string) => `/menu/${slug}`;
 
 export function productUrl(slug: string): string {
   const origin = typeof window === "undefined" ? "" : window.location.origin;
   return `${origin}${productPath(slug)}`;
+}
+
+/**
+ * The URL encoded in a product's QR code: an external WebAR experience when
+ * one is linked, otherwise the in-app AR product page.
+ */
+export function shareUrl(product: Pick<Product, "slug" | "arUrl">): string {
+  return product.arUrl?.trim() ? product.arUrl.trim() : productUrl(product.slug);
 }
 
 export function qrPngDataUrl(url: string, size = 1024): Promise<string> {

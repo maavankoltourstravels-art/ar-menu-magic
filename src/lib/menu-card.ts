@@ -1,7 +1,7 @@
 import { jsPDF } from "jspdf";
 
 import { assetToDataUrl } from "@/lib/asset-storage";
-import { productUrl, qrPngDataUrl, triggerDownload } from "@/lib/qr";
+import { qrPngDataUrl, shareUrl, triggerDownload } from "@/lib/qr";
 import { RESTAURANT, type Product } from "@/lib/types";
 
 /**
@@ -27,7 +27,7 @@ const MUTED = [122, 105, 92] as const;
 const GOLD = [186, 148, 84] as const;
 
 export async function buildCardData(product: Product): Promise<CardData> {
-  const url = productUrl(product.slug);
+  const url = shareUrl(product);
   const [imageDataUrl, qrDataUrl] = await Promise.all([
     assetToDataUrl(product.imageUrl).catch(() => null),
     qrPngDataUrl(url, 900),

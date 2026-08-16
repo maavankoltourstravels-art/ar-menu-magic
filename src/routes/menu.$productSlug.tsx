@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowLeft, Leaf, UtensilsCrossed } from "lucide-react";
+import { ArrowLeft, Leaf, Scan, UtensilsCrossed } from "lucide-react";
 
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useAssetUrl } from "@/hooks/use-asset-url";
 import { formatPrice } from "@/lib/menu-card";
 import { useProducts } from "@/lib/products-store";
-import { productUrl } from "@/lib/qr";
+import { shareUrl } from "@/lib/qr";
 import { RESTAURANT } from "@/lib/types";
 
 export const Route = createFileRoute("/menu/$productSlug")({
@@ -79,6 +79,13 @@ function ProductPage() {
               posterRef={product.imageUrl}
               alt={`3D model of ${product.name}`}
             />
+            {product.arUrl && (
+              <Button asChild size="lg" className="w-full rounded-full">
+                <a href={product.arUrl} target="_blank" rel="noopener noreferrer">
+                  <Scan className="mr-2 size-4" /> View this dish in AR
+                </a>
+              </Button>
+            )}
             {image && (
               <div className="overflow-hidden rounded-3xl border border-border/70 shadow-card">
                 <img
@@ -159,7 +166,7 @@ function ProductPage() {
             </div>
 
             <div className="flex flex-col items-center gap-4 rounded-3xl bg-gradient-dark p-6 text-primary-foreground sm:flex-row">
-              <QRCode url={productUrl(product.slug)} size={120} />
+              <QRCode url={shareUrl(product)} size={120} />
               <div className="text-center sm:text-left">
                 <p className="eyebrow text-[0.6rem] opacity-70">Share this dish</p>
                 <p className="mt-1 font-semibold">Scan to view in AR</p>

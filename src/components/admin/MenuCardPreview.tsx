@@ -17,7 +17,7 @@ import {
   generateMenuCardPdf,
   type CardData,
 } from "@/lib/menu-card";
-import { downloadQrPng, productUrl, triggerDownload } from "@/lib/qr";
+import { downloadQrPng, shareUrl, triggerDownload } from "@/lib/qr";
 import type { Product } from "@/lib/types";
 
 /**
@@ -118,7 +118,7 @@ export function MenuCardPreview({
             className="rounded-full"
             disabled={!product}
             onClick={() =>
-              product && downloadQrPng(productUrl(product.slug), `${product.slug}-qr.png`)
+              product && downloadQrPng(shareUrl(product), `${product.slug}-qr.png`)
             }
           >
             <QrCode className="mr-2 size-4" /> Download QR

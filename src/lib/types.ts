@@ -8,6 +8,8 @@ export type Product = {
   ingredients: string;
   imageUrl: string | null;
   model3dUrl: string | null;
+  /** Optional external WebAR experience link (used for the QR + AR button). */
+  arUrl?: string | null;
   qrCodeUrl: string | null;
   published: boolean;
   featured: boolean;
@@ -20,6 +22,8 @@ export type ProductInput = Omit<Product, "id" | "createdAt" | "updatedAt" | "qrC
 export const CATEGORIES = [
   "Pizza",
   "Pasta",
+  "Burger",
+  "Sandwich",
   "Antipasti",
   "Dolci",
   "Bevande",

@@ -46,6 +46,7 @@ export function ProductForm({
   const [ingredients, setIngredients] = useState(initial?.ingredients ?? "");
   const [featured, setFeatured] = useState(initial?.featured ?? false);
   const [published, setPublished] = useState(initial?.published ?? true);
+  const [arUrl, setArUrl] = useState(initial?.arUrl ?? "");
 
   const [imageRef, setImageRef] = useState<string | null>(initial?.imageUrl ?? null);
   const [modelRef, setModelRef] = useState<string | null>(initial?.model3dUrl ?? null);
@@ -99,6 +100,7 @@ export function ProductForm({
       ingredients: ingredients.trim(),
       imageUrl: imageRef,
       model3dUrl: modelRef,
+      arUrl: arUrl.trim() || null,
       published,
       featured,
     });
@@ -188,6 +190,19 @@ export function ProductForm({
             placeholder="San Marzano tomato, fior di latte, basil…"
             onChange={(e) => setIngredients(e.target.value)}
           />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="arUrl">External AR experience link (optional)</Label>
+          <Input
+            id="arUrl"
+            value={arUrl}
+            placeholder="https://webxr.run/…"
+            onChange={(e) => setArUrl(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            When set, the QR code and menu card point straight to this WebAR experience.
+          </p>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
