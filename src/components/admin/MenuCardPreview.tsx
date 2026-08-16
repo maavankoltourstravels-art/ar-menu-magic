@@ -118,7 +118,7 @@ export function MenuCardPreview({
             className="rounded-full"
             disabled={!product}
             onClick={() =>
-              product && downloadQrPng(productUrl(product.slug), `${product.slug}-qr.png`)
+              product && downloadQrPng(shareUrl(product), `${product.slug}-qr.png`)
             }
           >
             <QrCode className="mr-2 size-4" /> Download QR

@@ -164,7 +164,7 @@ export function ProductTable({
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={() =>
-                        downloadQrPng(productUrl(product.slug), `${product.slug}-qr.png`)
+                        downloadQrPng(shareUrl(product), `${product.slug}-qr.png`)
                       }
                     >
                       <QrCode className="mr-2 size-4" /> Download QR
