@@ -68,8 +68,12 @@ async function circularPhoto(src: string, size = 900): Promise<string> {
 
 const BG_WORD_ROWS = [30, 60, 90, 118];
 
-function bgWord(name: string): string {
-  return (name.split(/\s+/)[0] ?? name).toUpperCase().slice(0, 8);
+/** Picks a short, punchy word for the oversized repeated background type. */
+function bgWord(product: Product): string {
+  const words = product.name.split(/\s+/).filter(Boolean);
+  const candidates = [...words.reverse(), product.category].filter(Boolean);
+  const fit = candidates.find((w) => w.length <= 8);
+  return (fit ?? candidates[0] ?? product.name).toUpperCase();
 }
 
 export async function generateMenuCardPdf(data: CardData): Promise<jsPDF> {
