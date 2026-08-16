@@ -33,4 +33,6 @@ export const RESTAURANT = {
   name: "La Piazza",
   tagline: "Cucina Italiana · Since 1998",
   motto: "See it before you order",
+  location: "Panniyankara, Calicut",
+  phone: "+91 97471 04187",
 } as const;
